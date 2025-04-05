@@ -1,4 +1,5 @@
 // components/DrawerContent.tsx
+"use client";
 import React from "react";
 import { Box, IconButton, Typography, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
