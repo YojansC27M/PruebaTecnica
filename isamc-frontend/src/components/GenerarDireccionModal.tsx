@@ -43,9 +43,22 @@ export default function GenerarDireccionModal({
   const [complemento, setComplemento] = useState("");
   const [barrio, setBarrio] = useState("");
 
+  const limpiarCampos = () => {
+    setPais("");
+    setDepartamento("");
+    setMunicipio("");
+    setTipoVia("");
+    setNumeroPrincipal("");
+    setLetra("");
+    setNumeroSecundario("");
+    setComplemento("");
+    setBarrio("");
+  };
+
   const generarDireccion = () => {
-    const direccion = `${tipoVia} ${numeroPrincipal}${letra ? letra : ""} #${numeroSecundario}, ${complemento}, Barrio ${barrio}, ${municipio}, ${departamento}, ${pais}`;
+    const direccion = `${tipoVia} ${numeroPrincipal}${letra ? letra : ""} #${numeroSecundario}, ${complemento}, Barrio ${barrio}`;
     onGuardar(direccion);
+    limpiarCampos();
   };
 
   return (

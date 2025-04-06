@@ -11,8 +11,11 @@ import {
   SelectChangeEvent,
   TextField,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CrearPersonaModal from "./CrearPersona";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -22,18 +25,60 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-export default function BasicGrid() {
+export default function FiltrarPersona() {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState("");
   const [tipoDocumento, setTipoDocumento] = useState("");
+  const [numeroDocumento, setNumeroDocumento] = useState("");
+  const router = useRouter();
 
   const handleChangePersona = (event: SelectChangeEvent) => {
     setTipo(event.target.value);
-    setTipoDocumento(""); // Limpiar el tipo de documento al cambiar el tipo de persona
+    setTipoDocumento("");
+    setNumeroDocumento("");
   };
+
+  
 
   const handleTipoDocumentoChange = (event: SelectChangeEvent) => {
     setTipoDocumento(event.target.value);
+  };
+
+  const handleBuscar = async () => {
+    if (!tipo || !tipoDocumento || !numeroDocumento) {
+      Swal.fire("Campos incompletos", "Debes llenar todos los campos obligatorios.", "warning");
+      return;
+    }
+
+    
+    try {
+      const res = await axios.get("http://localhost:8000/api/verificar-persona/", {
+        params: {
+          tipo_documento: tipoDocumento,
+          numero_documento: numeroDocumento,
+        },
+      });
+
+      if (tipo === "juridica") {
+        if (res.data.existe) {
+          Swal.fire("Persona jurídica encontrada", `Razón social: ${res.data.nombres}`, "info");
+        } else {
+          Swal.fire("No registrada", "No existe ninguna persona jurídica con este NIT, por favor diligencie el siguiente formulario", "warning");
+        }
+        router.push("/CrearEmpresa");
+        return;
+      }
+  
+
+      if (res.data.existe) {
+        Swal.fire("Persona ya registrada", `Nombre: ${res.data.nombres}`, "info");
+      } else {
+        setOpen(true);
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo verificar la persona", "error");
+    }
   };
 
   const tiposDocumentoNatural = [
@@ -57,14 +102,20 @@ export default function BasicGrid() {
     tipo === "juridica" ? tiposDocumentoJuridica :
     [];
 
+  useEffect(() => {
+    const esValido = tiposDocumento.some(doc => doc.value === tipoDocumento);
+    if (!esValido) {
+      setTipoDocumento("");
+    }
+  }, [tipo]);
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
         <Grid size={12}>
           <Box
             sx={{
-              background:
-                "linear-gradient(90deg, rgba(255,196,0,1) 0%, rgba(191,95,5,1) 50%, rgba(224,109,0,1) 100%)",
+              background: "linear-gradient(90deg, rgba(255,196,0,1) 0%, rgba(191,95,5,1) 50%, rgba(224,109,0,1) 100%)",
               p: 1,
               borderRadius: 4,
               color: "white",
@@ -115,6 +166,8 @@ export default function BasicGrid() {
             label="Número de documento: *"
             variant="outlined"
             fullWidth
+            value={numeroDocumento}
+            onChange={(e) => setNumeroDocumento(e.target.value)}
           />
         </Grid>
 
@@ -123,7 +176,7 @@ export default function BasicGrid() {
             variant="contained"
             endIcon={<SearchIcon />}
             sx={{ width: "70%", backgroundColor: "#ff9800", borderRadius: 4 }}
-            onClick={() => setOpen(true)}
+            onClick={handleBuscar}
           >
             Buscar
           </Button>
@@ -133,3 +186,5 @@ export default function BasicGrid() {
     </Box>
   );
 }
+
+
